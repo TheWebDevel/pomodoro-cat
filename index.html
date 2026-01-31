@@ -102,58 +102,6 @@
             50% { opacity: 1; }
         }
 
-        /* Meteor Shower */
-        .meteor-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-            overflow: hidden;
-        }
-
-        .meteor {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
-            border-radius: 50%;
-            opacity: 0;
-        }
-
-        .meteor::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-left: 50px solid transparent;
-            border-right: 50px solid transparent;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            transform-origin: right;
-            right: 2px;
-        }
-
-        .meteor.falling {
-            animation: meteor-fall 1s ease-out forwards;
-        }
-
-        @keyframes meteor-fall {
-            0% {
-                opacity: 1;
-                transform: translateX(0) translateY(0);
-            }
-            70% {
-                opacity: 0.8;
-            }
-            100% {
-                opacity: 0;
-                transform: translateX(-300px) translateY(300px);
-            }
-        }
 
         .container {
             text-align: center;
@@ -916,9 +864,6 @@
     <!-- Stars -->
     <div class="stars" id="stars"></div>
 
-    <!-- Meteor Shower -->
-    <div class="meteor-container" id="meteorContainer"></div>
-
     <div class="mode-indicator" id="modeIndicator">FOCUS TIME</div>
     <button class="top-right-btn" id="calendarBtn" title="View Calendar">📅</button>
 
@@ -1098,53 +1043,6 @@
                 star.style.animationDelay = Math.random() * 3 + 's';
                 star.style.animationDuration = (Math.random() * 2 + 2) + 's';
                 starsContainer.appendChild(star);
-            }
-        }
-
-        // Meteor shower
-        let meteorInterval;
-
-        function createMeteor() {
-            const container = document.getElementById('meteorContainer');
-            const meteor = document.createElement('div');
-            meteor.className = 'meteor';
-
-            // Random start position (top right area)
-            const startX = Math.random() * 50 + 50; // 50-100% from left
-            const startY = Math.random() * -10; // Start above viewport
-
-            meteor.style.left = startX + '%';
-            meteor.style.top = startY + '%';
-            meteor.style.transform = `rotate(${Math.random() * 20 + 35}deg)`;
-
-            container.appendChild(meteor);
-
-            // Trigger animation
-            setTimeout(() => {
-                meteor.classList.add('falling');
-            }, 10);
-
-            // Remove after animation
-            setTimeout(() => {
-                meteor.remove();
-            }, 1000);
-        }
-
-        function startMeteorShower() {
-            // Occasional meteor - every 8-15 seconds
-            const scheduleNext = () => {
-                const delay = Math.random() * 7000 + 8000; // 8-15 seconds
-                meteorInterval = setTimeout(() => {
-                    createMeteor();
-                    scheduleNext();
-                }, delay);
-            };
-            scheduleNext();
-        }
-
-        function stopMeteorShower() {
-            if (meteorInterval) {
-                clearTimeout(meteorInterval);
             }
         }
 
@@ -1853,7 +1751,6 @@
 
             // Initialize visual effects
             createStars();
-            startMeteorShower();
         }
 
         init();
