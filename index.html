@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Cat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            width: 100vw;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a3e 40%, #0d1b2a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #eaeaea;
+            position: relative;
+        }
+
+        /* Northern Lights Effect */
+        .northern-lights {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .aurora {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            top: -50%;
+            left: -50%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(0, 255, 128, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 30%, rgba(0, 200, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 80%, rgba(138, 43, 226, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 10%, rgba(0, 255, 200, 0.07) 0%, transparent 50%);
+            animation: aurora-drift 20s ease-in-out infinite;
+            filter: blur(60px);
+        }
+
+        .aurora-layer-2 {
+            animation-delay: -10s;
+            opacity: 0.7;
+            background:
+                radial-gradient(ellipse at 30% 70%, rgba(0, 255, 150, 0.06) 0%, transparent 40%),
+                radial-gradient(ellipse at 70% 20%, rgba(100, 200, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 40%, rgba(180, 100, 255, 0.04) 0%, transparent 40%);
+        }
+
+        @keyframes aurora-drift {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translate(5%, 3%) rotate(2deg) scale(1.05);
+            }
+            50% {
+                transform: translate(-3%, 5%) rotate(-1deg) scale(1.02);
+            }
+            75% {
+                transform: translate(3%, -2%) rotate(1deg) scale(1.08);
+            }
+        }
+
+        /* Stars */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Meteor Shower */
+        .meteor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .meteor {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .meteor::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            transform-origin: right;
+            right: 2px;
+        }
+
+        .meteor.falling {
+            animation: meteor-fall 1s ease-out forwards;
+        }
+
+        @keyframes meteor-fall {
+            0% {
+                opacity: 1;
+                transform: translateX(0) translateY(0);
+            }
+            70% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(-300px) translateY(300px);
+            }
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timer-display {
+            font-size: 120px;
+            font-weight: 200;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -4px;
+            margin: 20px 0;
+            text-shadow: 0 0 80px rgba(255, 182, 193, 0.4), 0 0 120px rgba(255, 182, 193, 0.2);
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(255, 230, 240, 0.1) 0%, rgba(255, 200, 220, 0.05) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .timer-display.break {
+            text-shadow: 0 0 80px rgba(135, 206, 250, 0.4), 0 0 120px rgba(135, 206, 250, 0.2);
+            background: linear-gradient(135deg, rgba(200, 230, 255, 0.1) 0%, rgba(180, 220, 255, 0.05) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .cat-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+            position: relative;
+            filter: drop-shadow(0 20px 40px rgba(255, 158, 205, 0.2));
+        }
+
+        .cat {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        /* Cat Body */
+        .cat-body {
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffb3d1 0%, #ff9ecd 100%);
+            border-radius: 60px 60px 50px 50px;
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 10px 30px rgba(255, 158, 205, 0.4);
+            transition: all 0.5s ease;
+        }
+
+        /* Cat Head */
+        .cat-head {
+            width: 90px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffb3d1 0%, #ff9ecd 100%);
+            border-radius: 50% 50% 45% 45%;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            transition: all 0.5s ease;
+        }
+
+        /* Cat Ears */
+        .cat-ear {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 30px solid #ff9ecd;
+            position: absolute;
+            top: -15px;
+            transition: all 0.5s ease;
+        }
+
+        .cat-ear.left {
+            left: 5px;
+            transform: rotate(-15deg);
+        }
+
+        .cat-ear.right {
+            right: 5px;
+            transform: rotate(15deg);
+        }
+
+        .cat-ear-inner {
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 18px solid #ffb3d1;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Cat Eyes */
+        .cat-eye {
+            width: 16px;
+            height: 16px;
+            background: #2d2d2d;
+            border-radius: 50%;
+            position: absolute;
+            top: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .cat-eye.left {
+            left: 20px;
+        }
+
+        .cat-eye.right {
+            right: 20px;
+        }
+
+        .cat-eye::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            transition: all 0.3s ease;
+        }
+
+        /* Cat Nose */
+        .cat-nose {
+            width: 10px;
+            height: 8px;
+            background: #ff6b9d;
+            border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.5s ease;
+        }
+
+        /* Cat Mouth */
+        .cat-mouth {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 10px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .cat-mouth::before,
+        .cat-mouth::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 8px;
+            border: 2px solid #ff6b9d;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .cat-mouth::before {
+            left: 0;
+        }
+
+        .cat-mouth::after {
+            right: 0;
+        }
+
+        /* Cat Tail */
+        .cat-tail {
+            width: 60px;
+            height: 12px;
+            background: linear-gradient(90deg, #ff9ecd 0%, #ffb3d1 100%);
+            border-radius: 10px;
+            position: absolute;
+            bottom: 40px;
+            right: 20px;
+            transform-origin: left center;
+            box-shadow: 0 5px 15px rgba(255, 158, 205, 0.3);
+            transition: all 0.5s ease;
+        }
+
+        /* Tail wag animation */
+        .cat.awake .cat-tail {
+            animation: tail-happy 0.4s ease-in-out infinite;
+        }
+
+        @keyframes tail-happy {
+            0%, 100% { transform: rotate(-20deg); }
+            50% { transform: rotate(20deg); }
+        }
+
+        .cat.sleeping .cat-tail {
+            animation: tail-slow 3s ease-in-out infinite;
+        }
+
+        @keyframes tail-slow {
+            0%, 100% { transform: rotate(-8deg); }
+            50% { transform: rotate(8deg); }
+        }
+
+        /* Sparkle elements */
+        .sparkle {
+            position: absolute;
+            font-size: 16px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sparkle:nth-child(1) { top: 20px; left: 10px; }
+        .sparkle:nth-child(2) { top: 40px; right: 10px; }
+        .sparkle:nth-child(3) { top: 70px; left: 20px; }
+
+        /* Blush cheeks */
+        .cat-blush {
+            position: absolute;
+            width: 18px;
+            height: 10px;
+            background: rgba(255, 150, 180, 0.5);
+            border-radius: 50%;
+            top: 40px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .cat-blush.left {
+            left: 8px;
+        }
+
+        .cat-blush.right {
+            right: 8px;
+        }
+
+        /* Sleeping State */
+        .cat.sleeping .cat-eye {
+            height: 3px;
+            top: 38px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .cat.sleeping .zzz {
+            animation: zzz-float 2.5s ease-in-out infinite;
+        }
+
+        .cat.sleeping .zzz:nth-child(4) { animation-delay: 0s; }
+        .cat.sleeping .zzz:nth-child(5) { animation-delay: 0.8s; }
+        .cat.sleeping .zzz:nth-child(6) { animation-delay: 1.6s; }
+
+        @keyframes zzz-float {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) scale(0.8);
+            }
+            20% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(40px, -50px) scale(1.2);
+            }
+        }
+
+        /* Awake State */
+        .cat.awake .cat-eye {
+            width: 18px;
+            height: 18px;
+            background: #2d2d2d;
+            top: 29px;
+            animation: eye-sparkle 3s ease-in-out infinite;
+        }
+
+        @keyframes eye-sparkle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .cat.awake .cat-eye::after {
+            width: 8px;
+            height: 8px;
+            top: 2px;
+            right: 2px;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .cat.awake .cat-mouth {
+            opacity: 1;
+        }
+
+        .cat.awake .cat-blush {
+            opacity: 1;
+            animation: blush-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes blush-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        .cat.awake {
+            animation: happy-bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes happy-bounce {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-8px) scale(1.02);
+            }
+        }
+
+        .cat.awake .sparkle {
+            animation: sparkle-float 2s ease-out infinite;
+        }
+
+        .cat.awake .sparkle:nth-child(1) { animation-delay: 0s; }
+        .cat.awake .sparkle:nth-child(2) { animation-delay: 0.7s; }
+        .cat.awake .sparkle:nth-child(3) { animation-delay: 1.4s; }
+
+        @keyframes sparkle-float {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) scale(0.5) rotate(0deg);
+            }
+            15% {
+                opacity: 1;
+                transform: translate(5px, -10px) scale(1) rotate(45deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(20px, -60px) scale(1.5) rotate(180deg);
+            }
+        }
+
+        .cat.bouncing {
+            animation: super-bounce 0.3s ease-in-out infinite;
+        }
+
+        @keyframes super-bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-25px) scale(1.05); }
+        }
+
+        .zzz {
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            font-weight: bold;
+        }
+
+        /* UI Elements */
+        .status-text {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+            min-height: 27px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            letter-spacing: 1px;
+            backdrop-filter: blur(20px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(255, 158, 205, 0.8) 0%, rgba(255, 126, 179, 0.8) 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 158, 205, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 158, 205, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-icon {
+            padding: 15px;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stats {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 2;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 200;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .settings-modal, .calendar-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-modal.active, .calendar-modal.active {
+            display: flex;
+        }
+
+        .settings-content, .calendar-content {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .settings-content h2, .calendar-content h2 {
+            margin-bottom: 30px;
+            font-weight: 300;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .setting-item {
+            margin-bottom: 20px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .setting-item input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .setting-item input:focus {
+            outline: none;
+            border-color: #ff9ecd;
+            box-shadow: 0 0 20px rgba(255, 158, 205, 0.3);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        /* Calendar Styles */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-nav:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .calendar-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day-label {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 10px 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .calendar-day.empty {
+            cursor: default;
+        }
+
+        .calendar-day.today {
+            border: 2px solid #ff9ecd;
+            box-shadow: 0 0 15px rgba(255, 158, 205, 0.4);
+        }
+
+        .calendar-day.has-sessions {
+            background: linear-gradient(135deg, rgba(255, 158, 205, 0.3), rgba(255, 126, 179, 0.3));
+        }
+
+        .calendar-day.session-count {
+            font-weight: bold;
+            color: #ff9ecd;
+        }
+
+        .calendar-day-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 10;
+        }
+
+        .calendar-day:hover .calendar-day-tooltip {
+            opacity: 1;
+        }
+
+        .streak-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .streak-stat {
+            text-align: center;
+        }
+
+        .streak-stat-value {
+            font-size: 28px;
+            font-weight: 200;
+            color: #ff9ecd;
+            text-shadow: 0 0 15px rgba(255, 158, 205, 0.5);
+        }
+
+        .streak-stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+
+        .achievement {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(255, 158, 205, 0.15), rgba(255, 126, 179, 0.15));
+            border-radius: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .achievement-icon {
+            font-size: 32px;
+        }
+
+        .achievement-text {
+            flex: 1;
+        }
+
+        .achievement-title {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .achievement-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .progress-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            pointer-events: none;
+        }
+
+        .progress-ring circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .mode-indicator {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 2;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .top-right-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .top-right-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Northern Lights Background -->
+    <div class="northern-lights">
+        <div class="aurora"></div>
+        <div class="aurora aurora-layer-2"></div>
+    </div>
+
+    <!-- Stars -->
+    <div class="stars" id="stars"></div>
+
+    <!-- Meteor Shower -->
+    <div class="meteor-container" id="meteorContainer"></div>
+
+    <div class="mode-indicator" id="modeIndicator">FOCUS TIME</div>
+    <button class="top-right-btn" id="calendarBtn" title="View Calendar">📅</button>
+
+    <div class="container">
+        <div class="cat-container">
+            <div class="cat" id="cat">
+                <div class="zzz">Z</div>
+                <div class="zzz">Z</div>
+                <div class="zzz">Z</div>
+                <div class="sparkle">✨</div>
+                <div class="sparkle">✨</div>
+                <div class="sparkle">✨</div>
+                <div class="cat-body"></div>
+                <div class="cat-head">
+                    <div class="cat-ear left"><div class="cat-ear-inner"></div></div>
+                    <div class="cat-ear right"><div class="cat-ear-inner"></div></div>
+                    <div class="cat-blush left"></div>
+                    <div class="cat-blush right"></div>
+                    <div class="cat-eye left"></div>
+                    <div class="cat-eye right"></div>
+                    <div class="cat-nose"></div>
+                    <div class="cat-mouth"></div>
+                </div>
+                <div class="cat-tail"></div>
+            </div>
+            <svg class="progress-ring">
+                <circle
+                    stroke="rgba(255, 158, 205, 0.3)"
+                    stroke-width="4"
+                    fill="transparent"
+                    r="120"
+                    cx="125"
+                    cy="125"
+                />
+                <circle
+                    id="progressCircle"
+                    stroke="#ff9ecd"
+                    stroke-width="4"
+                    fill="transparent"
+                    r="120"
+                    cx="125"
+                    cy="125"
+                    stroke-linecap="round"
+                    transform="rotate(-90 125 125)"
+                />
+            </svg>
+        </div>
+
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="status-text" id="statusText">Ready to focus</div>
+
+        <div class="controls">
+            <button class="btn-primary" id="startBtn">Start</button>
+            <button class="btn-secondary" id="resetBtn">Reset</button>
+            <button class="btn-secondary btn-icon" id="settingsBtn">⚙</button>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <div class="stat-value" id="todayCount">0</div>
+            <div>Today</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="streakCount">0</div>
+            <div>Day Streak</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="weekCount">0</div>
+            <div>This Week</div>
+        </div>
+    </div>
+
+    <!-- Calendar Modal -->
+    <div class="calendar-modal" id="calendarModal">
+        <div class="calendar-content">
+            <button class="close-btn" id="closeCalendar">&times;</button>
+            <h2>📅 Your Focus Journey</h2>
+
+            <div class="calendar-header">
+                <button class="calendar-nav" id="prevMonth">◀</button>
+                <div class="calendar-title" id="calendarTitle">January 2025</div>
+                <button class="calendar-nav" id="nextMonth">▶</button>
+            </div>
+
+            <div class="calendar-grid">
+                <div class="calendar-day-label">Sun</div>
+                <div class="calendar-day-label">Mon</div>
+                <div class="calendar-day-label">Tue</div>
+                <div class="calendar-day-label">Wed</div>
+                <div class="calendar-day-label">Thu</div>
+                <div class="calendar-day-label">Fri</div>
+                <div class="calendar-day-label">Sat</div>
+            </div>
+
+            <div class="calendar-grid" id="calendarDays"></div>
+
+            <div class="streak-stats">
+                <div class="streak-stat">
+                    <div class="streak-stat-value" id="statTotalSessions">0</div>
+                    <div class="streak-stat-label">Total Sessions</div>
+                </div>
+                <div class="streak-stat">
+                    <div class="streak-stat-value" id="statLongestStreak">0</div>
+                    <div class="streak-stat-label">Longest Streak</div>
+                </div>
+                <div class="streak-stat">
+                    <div class="streak-stat-value" id="statTotalMinutes">0</div>
+                    <div class="streak-stat-label">Total Minutes</div>
+                </div>
+            </div>
+
+            <div id="achievementArea"></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <button class="close-btn" id="closeSettings">&times;</button>
+            <h2>Settings</h2>
+            <div class="setting-item">
+                <label>Focus Duration (minutes)</label>
+                <input type="number" id="focusDuration" value="25" min="1" max="120">
+            </div>
+            <div class="setting-item">
+                <label>Short Break (minutes)</label>
+                <input type="number" id="shortBreak" value="5" min="1" max="30">
+            </div>
+            <div class="setting-item">
+                <label>Long Break (minutes)</label>
+                <input type="number" id="longBreak" value="15" min="1" max="60">
+            </div>
+            <div class="setting-item">
+                <label>Sessions until long break</label>
+                <input type="number" id="sessionsUntilLong" value="4" min="2" max="10">
+            </div>
+            <button class="btn-primary" id="saveSettings" style="width: 100%; margin-top: 10px;">Save</button>
+        </div>
+    </div>
+
+    <script>
+        // BroadcastChannel for cross-tab sync
+        const channel = new BroadcastChannel('pomodoro_cat_sync');
+
+        // State
+        let state = {
+            timeLeft: 25 * 60,
+            totalTime: 25 * 60,
+            isRunning: false,
+            mode: 'focus',
+            sessionsCompleted: 0,
+            interval: null,
+            endTime: null
+        };
+
+        // Settings
+        let settings = {
+            focusDuration: 25,
+            shortBreak: 5,
+            longBreak: 15,
+            sessionsUntilLong: 4
+        };
+
+        // Create stars
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 150;
+
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 2 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Meteor shower
+        let meteorInterval;
+
+        function createMeteor() {
+            const container = document.getElementById('meteorContainer');
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+
+            // Random start position (top right area)
+            const startX = Math.random() * 50 + 50; // 50-100% from left
+            const startY = Math.random() * -10; // Start above viewport
+
+            meteor.style.left = startX + '%';
+            meteor.style.top = startY + '%';
+            meteor.style.transform = `rotate(${Math.random() * 20 + 35}deg)`;
+
+            container.appendChild(meteor);
+
+            // Trigger animation
+            setTimeout(() => {
+                meteor.classList.add('falling');
+            }, 10);
+
+            // Remove after animation
+            setTimeout(() => {
+                meteor.remove();
+            }, 1000);
+        }
+
+        function startMeteorShower() {
+            // Occasional meteor - every 8-15 seconds
+            const scheduleNext = () => {
+                const delay = Math.random() * 7000 + 8000; // 8-15 seconds
+                meteorInterval = setTimeout(() => {
+                    createMeteor();
+                    scheduleNext();
+                }, delay);
+            };
+            scheduleNext();
+        }
+
+        function stopMeteorShower() {
+            if (meteorInterval) {
+                clearTimeout(meteorInterval);
+            }
+        }
+
+        // DOM Elements
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const calendarBtn = document.getElementById('calendarBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const calendarModal = document.getElementById('calendarModal');
+        const closeSettings = document.getElementById('closeSettings');
+        const closeCalendar = document.getElementById('closeCalendar');
+        const saveSettings = document.getElementById('saveSettings');
+        const cat = document.getElementById('cat');
+        const statusText = document.getElementById('statusText');
+        const modeIndicator = document.getElementById('modeIndicator');
+        const progressCircle = document.getElementById('progressCircle');
+        const todayCount = document.getElementById('todayCount');
+        const streakCount = document.getElementById('streakCount');
+        const weekCount = document.getElementById('weekCount');
+
+        // Initialize progress circle
+        const circumference = 2 * Math.PI * 120;
+        progressCircle.style.strokeDasharray = circumference;
+        progressCircle.style.strokeDashoffset = 0;
+
+        // Local Storage helpers with 30-day retention (except streaks)
+        const Storage = {
+            KEY: 'pomodoro_cat_data',
+            SETTINGS_KEY: 'pomodoro_cat_settings',
+            STATE_KEY: 'pomodoro_cat_state',
+            STREAK_KEY: 'pomodoro_cat_streaks',
+
+            getData() {
+                const data = localStorage.getItem(this.KEY);
+                if (!data) return { sessions: [] };
+
+                const parsed = JSON.parse(data);
+                const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+                parsed.sessions = parsed.sessions.filter(s => s.timestamp > thirtyDaysAgo);
+                this.setData(parsed);
+                return parsed;
+            },
+
+            setData(data) {
+                localStorage.setItem(this.KEY, JSON.stringify(data));
+            },
+
+            addSession(duration, mode) {
+                const data = this.getData();
+                data.sessions.push({
+                    timestamp: Date.now(),
+                    duration,
+                    mode
+                });
+                this.setData(data);
+
+                // Also record date in streak storage (forever)
+                if (mode === 'focus') {
+                    const today = new Date();
+                    const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+                    const streakData = this.getStreakData();
+                    if (!streakData.includes(dateKey)) {
+                        streakData.push(dateKey);
+                        this.saveStreakData(streakData);
+                    }
+                }
+            },
+
+            getSettings() {
+                const saved = localStorage.getItem(this.SETTINGS_KEY);
+                return saved ? JSON.parse(saved) : settings;
+            },
+
+            saveSettings(newSettings) {
+                localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(newSettings));
+            },
+
+            saveState(stateData) {
+                localStorage.setItem(this.STATE_KEY, JSON.stringify(stateData));
+            },
+
+            getState() {
+                const saved = localStorage.getItem(this.STATE_KEY);
+                return saved ? JSON.parse(saved) : null;
+            },
+
+            clearState() {
+                localStorage.removeItem(this.STATE_KEY);
+            },
+
+            getStreakData() {
+                const saved = localStorage.getItem(this.STREAK_KEY);
+                return saved ? JSON.parse(saved) : [];
+            },
+
+            saveStreakData(streakData) {
+                localStorage.setItem(this.STREAK_KEY, JSON.stringify(streakData));
+            }
+        };
+
+        // Broadcast sync state to other tabs
+        function broadcastState() {
+            channel.postMessage({
+                type: 'STATE_UPDATE',
+                state: {
+                    timeLeft: state.timeLeft,
+                    totalTime: state.totalTime,
+                    isRunning: state.isRunning,
+                    mode: state.mode,
+                    sessionsCompleted: state.sessionsCompleted,
+                    endTime: state.endTime
+                }
+            });
+        }
+
+        // Listen for state updates from other tabs
+        channel.onmessage = (event) => {
+            if (event.data.type === 'STATE_UPDATE') {
+                syncFromOtherTab(event.data.state);
+            }
+        };
+
+        function syncFromOtherTab(remoteState) {
+            const wasRunning = state.isRunning;
+
+            state.timeLeft = remoteState.timeLeft;
+            state.totalTime = remoteState.totalTime;
+            state.isRunning = remoteState.isRunning;
+            state.mode = remoteState.mode;
+            state.sessionsCompleted = remoteState.sessionsCompleted;
+            state.endTime = remoteState.endTime;
+
+            updateDisplay();
+            updateUI();
+
+            if (state.isRunning && !wasRunning) {
+                startTimer(true);
+            } else if (!state.isRunning && wasRunning) {
+                clearInterval(state.interval);
+            }
+        }
+
+        // Stats calculations
+        function getTodaySessions() {
+            const data = Storage.getData();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return data.sessions.filter(s => s.timestamp >= today.getTime() && s.mode === 'focus').length;
+        }
+
+        function getWeekSessions() {
+            const data = Storage.getData();
+            const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            return data.sessions.filter(s => s.timestamp >= weekAgo && s.mode === 'focus').length;
+        }
+
+        function getStreak() {
+            // Use permanent streak data instead of 30-day filtered data
+            const streakDates = Storage.getStreakData();
+
+            if (streakDates.length === 0) return 0;
+
+            // Sort dates descending
+            const sortedDates = streakDates.sort((a, b) => b.localeCompare(a));
+
+            // Calculate current streak from today backwards
+            let streak = 0;
+            const today = new Date();
+            let checkDate = new Date(today);
+
+            for (let i = 0; i < sortedDates.length; i++) {
+                const dateStr = sortedDates[i];
+                const checkDateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+
+                if (dateStr === checkDateStr) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        function getLongestStreak() {
+            const streakDates = Storage.getStreakData();
+
+            if (streakDates.length === 0) return 0;
+
+            // Sort dates ascending
+            const sortedDates = streakDates.sort((a, b) => a.localeCompare(b));
+
+            // Convert to Date objects for calculation
+            const dateObjs = sortedDates.map(d => {
+                const [year, month, day] = d.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            });
+
+            let maxStreak = 1;
+            let currentStreak = 1;
+
+            for (let i = 1; i < dateObjs.length; i++) {
+                const prevDay = dateObjs[i - 1];
+                const currDay = dateObjs[i];
+                const diffTime = currDay - prevDay;
+                const diffDays = Math.round(diffTime / (24 * 60 * 60 * 1000));
+
+                if (diffDays === 1) {
+                    currentStreak++;
+                    maxStreak = Math.max(maxStreak, currentStreak);
+                } else {
+                    currentStreak = 1;
+                }
+            }
+
+            return maxStreak;
+        }
+
+        function getTotalMinutes() {
+            const data = Storage.getData();
+            return data.sessions
+                .filter(s => s.mode === 'focus')
+                .reduce((total, s) => total + s.duration, 0);
+        }
+
+        function updateStats() {
+            todayCount.textContent = getTodaySessions();
+            streakCount.textContent = getStreak();
+            weekCount.textContent = getWeekSessions();
+        }
+
+        // Timer functions
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timerDisplay.textContent = formatTime(state.timeLeft);
+
+            const progress = state.timeLeft / state.totalTime;
+            const offset = circumference * (1 - progress);
+            progressCircle.style.strokeDashoffset = offset;
+
+            document.title = `${formatTime(state.timeLeft)} - Pomodoro Cat`;
+        }
+
+        function updateUI() {
+            startBtn.textContent = state.isRunning ? 'Pause' : 'Start';
+            statusText.textContent = state.isRunning
+                ? (state.mode === 'focus' ? "Let's do this! 💪" : 'Take a break')
+                : 'Paused';
+
+            setCatMood(state.isRunning ? 'awake' : 'sleeping');
+        }
+
+        function setCatMood(mood) {
+            cat.className = 'cat';
+            if (mood === 'sleeping' || mood === 'idle') {
+                cat.classList.add('sleeping');
+            } else if (mood === 'awake') {
+                cat.classList.add('awake');
+            } else if (mood === 'bouncing') {
+                cat.classList.add('bouncing');
+            }
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+
+            switch(mode) {
+                case 'focus':
+                    state.totalTime = settings.focusDuration * 60;
+                    modeIndicator.textContent = 'FOCUS TIME';
+                    timerDisplay.classList.remove('break');
+                    progressCircle.style.stroke = '#ff9ecd';
+                    break;
+                case 'shortBreak':
+                    state.totalTime = settings.shortBreak * 60;
+                    modeIndicator.textContent = 'SHORT BREAK';
+                    timerDisplay.classList.add('break');
+                    progressCircle.style.stroke = '#87ceeb';
+                    break;
+                case 'longBreak':
+                    state.totalTime = settings.longBreak * 60;
+                    modeIndicator.textContent = 'LONG BREAK';
+                    timerDisplay.classList.add('break');
+                    progressCircle.style.stroke = '#87ceeb';
+                    break;
+            }
+
+            state.timeLeft = state.totalTime;
+            updateDisplay();
+            broadcastState();
+        }
+
+        function startTimer(fromSync = false) {
+            state.isRunning = true;
+
+            if (!fromSync) {
+                // Calculate end time for this session
+                state.endTime = Date.now() + (state.timeLeft * 1000);
+                Storage.saveState({
+                    timeLeft: state.timeLeft,
+                    totalTime: state.totalTime,
+                    isRunning: true,
+                    mode: state.mode,
+                    sessionsCompleted: state.sessionsCompleted,
+                    endTime: state.endTime
+                });
+                broadcastState();
+            }
+
+            startBtn.textContent = 'Pause';
+            statusText.textContent = state.mode === 'focus' ? "Let's do this! 💪" : 'Take a break';
+            setCatMood('awake');
+
+            state.interval = setInterval(() => {
+                if (state.endTime) {
+                    const remaining = Math.max(0, Math.ceil((state.endTime - Date.now()) / 1000));
+                    state.timeLeft = remaining;
+                } else {
+                    state.timeLeft--;
+                }
+
+                updateDisplay();
+
+                if (state.timeLeft <= 0) {
+                    complete();
+                }
+            }, 1000);
+        }
+
+        function pause() {
+            state.isRunning = false;
+            clearInterval(state.interval);
+            state.endTime = null;
+
+            Storage.saveState({
+                timeLeft: state.timeLeft,
+                totalTime: state.totalTime,
+                isRunning: false,
+                mode: state.mode,
+                sessionsCompleted: state.sessionsCompleted,
+                endTime: null
+            });
+
+            startBtn.textContent = 'Start';
+            statusText.textContent = 'Paused';
+            setCatMood('sleeping');
+            broadcastState();
+        }
+
+        function start() {
+            if (state.isRunning) {
+                pause();
+                return;
+            }
+            startTimer();
+        }
+
+        function reset() {
+            pause();
+            state.timeLeft = state.totalTime;
+            updateDisplay();
+            statusText.textContent = 'Ready to focus';
+            setCatMood('sleeping');
+            broadcastState();
+        }
+
+        function complete() {
+            pause();
+
+            if (state.mode === 'focus') {
+                state.sessionsCompleted++;
+                Storage.addSession(settings.focusDuration, 'focus');
+                updateStats();
+
+                if (state.sessionsCompleted % settings.sessionsUntilLong === 0) {
+                    setMode('longBreak');
+                    statusText.textContent = 'Amazing work! Long break time!';
+                } else {
+                    setMode('shortBreak');
+                    statusText.textContent = 'Great job! Short break time!';
+                }
+            } else {
+                setMode('focus');
+                statusText.textContent = 'Break over! Ready to focus?';
+            }
+
+            setCatMood('bouncing');
+
+            // Play notification sound for BOTH sessions and breaks
+            playNotificationSound();
+
+            // Send browser notification for BOTH sessions and breaks
+            if (Notification.permission === 'granted') {
+                new Notification('Pomodoro Cat', {
+                    body: statusText.textContent,
+                    icon: '🐱'
+                });
+            }
+
+            setTimeout(() => {
+                setCatMood('sleeping');
+            }, 2000);
+        }
+
+        function playNotificationSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Create a pleasant chime sound
+            const playTone = (freq, startTime, duration, volume = 0.3) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + startTime);
+                gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + startTime + duration);
+
+                oscillator.start(audioContext.currentTime + startTime);
+                oscillator.stop(audioContext.currentTime + startTime + duration);
+            };
+
+            // Play a pleasant 3-note chime
+            const now = audioContext.currentTime;
+            playTone(880, now, 0.3, 0.25);        // A5
+            playTone(1108.73, now + 0.15, 0.3, 0.2); // C#6
+            playTone(1318.51, now + 0.3, 0.4, 0.2); // E6
+        }
+
+        // Calendar functionality
+        let currentCalendarDate = new Date();
+
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+
+            document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+
+            const data = Storage.getData();
+            const sessionsByDay = {};
+
+            data.sessions.forEach(s => {
+                const date = new Date(s.timestamp);
+                if (date.getMonth() === month && date.getFullYear() === year && s.mode === 'focus') {
+                    const day = date.getDate();
+                    sessionsByDay[day] = (sessionsByDay[day] || 0) + 1;
+                }
+            });
+
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+
+            // Empty cells before first day
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day empty';
+                calendarDays.appendChild(emptyDay);
+            }
+
+            // Days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = day;
+
+                const isToday = today.getDate() === day &&
+                    today.getMonth() === month &&
+                    today.getFullYear() === year;
+
+                if (isToday) {
+                    dayElement.classList.add('today');
+                }
+
+                if (sessionsByDay[day]) {
+                    dayElement.classList.add('has-sessions');
+                    dayElement.classList.add('session-count');
+
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'calendar-day-tooltip';
+                    tooltip.textContent = `${sessionsByDay[day]} session${sessionsByDay[day] > 1 ? 's' : ''}`;
+                    dayElement.appendChild(tooltip);
+                }
+
+                calendarDays.appendChild(dayElement);
+            }
+
+            // Update stats
+            document.getElementById('statTotalSessions').textContent = data.sessions.filter(s => s.mode === 'focus').length;
+            document.getElementById('statLongestStreak').textContent = getLongestStreak();
+            document.getElementById('statTotalMinutes').textContent = getTotalMinutes();
+
+            // Achievements
+            renderAchievements();
+        }
+
+        function renderAchievements() {
+            const streak = getStreak();
+            const todaySessions = getTodaySessions();
+            const achievementArea = document.getElementById('achievementArea');
+            achievementArea.innerHTML = '';
+
+            const achievements = [];
+
+            if (streak >= 7) {
+                achievements.push({
+                    icon: '🔥',
+                    title: 'Week Warrior!',
+                    desc: `${streak} day streak - keep it up!`
+                });
+            }
+
+            if (streak >= 30) {
+                achievements.push({
+                    icon: '👑',
+                    title: 'Month Master!',
+                    desc: `${streak} days of consistent focus!`
+                });
+            }
+
+            if (todaySessions >= 4) {
+                achievements.push({
+                    icon: '💪',
+                    title: 'Productivity Machine!',
+                    desc: `${todaySessions} sessions today!`
+                });
+            }
+
+            if (todaySessions >= 8) {
+                achievements.push({
+                    icon: '🏆',
+                    title: 'Legendary Focus!',
+                    desc: `${todaySessions} sessions - absolutely unstoppable!`
+                });
+            }
+
+            const totalMinutes = getTotalMinutes();
+            if (totalMinutes >= 1000) {
+                achievements.push({
+                    icon: '⭐',
+                    title: 'Focus Centurion!',
+                    desc: `${Math.floor(totalMinutes / 60)}+ hours of deep work!`
+                });
+            }
+
+            if (achievements.length === 0) {
+                achievementArea.innerHTML = `
+                    <div class="achievement" style="opacity: 0.6;">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-text">
+                            <div class="achievement-title">Keep Going!</div>
+                            <div class="achievement-desc">Complete more sessions to unlock achievements</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                achievements.forEach(a => {
+                    const div = document.createElement('div');
+                    div.className = 'achievement';
+                    div.innerHTML = `
+                        <div class="achievement-icon">${a.icon}</div>
+                        <div class="achievement-text">
+                            <div class="achievement-title">${a.title}</div>
+                            <div class="achievement-desc">${a.desc}</div>
+                        </div>
+                    `;
+                    achievementArea.appendChild(div);
+                });
+            }
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', start);
+        resetBtn.addEventListener('click', reset);
+
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.classList.add('active');
+            document.getElementById('focusDuration').value = settings.focusDuration;
+            document.getElementById('shortBreak').value = settings.shortBreak;
+            document.getElementById('longBreak').value = settings.longBreak;
+            document.getElementById('sessionsUntilLong').value = settings.sessionsUntilLong;
+        });
+
+        calendarBtn.addEventListener('click', () => {
+            calendarModal.classList.add('active');
+            currentCalendarDate = new Date();
+            renderCalendar();
+        });
+
+        closeSettings.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+        });
+
+        closeCalendar.addEventListener('click', () => {
+            calendarModal.classList.remove('active');
+        });
+
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.classList.remove('active');
+            }
+        });
+
+        calendarModal.addEventListener('click', (e) => {
+            if (e.target === calendarModal) {
+                calendarModal.classList.remove('active');
+            }
+        });
+
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        saveSettings.addEventListener('click', () => {
+            settings.focusDuration = parseInt(document.getElementById('focusDuration').value) || 25;
+            settings.shortBreak = parseInt(document.getElementById('shortBreak').value) || 5;
+            settings.longBreak = parseInt(document.getElementById('longBreak').value) || 15;
+            settings.sessionsUntilLong = parseInt(document.getElementById('sessionsUntilLong').value) || 4;
+
+            Storage.saveSettings(settings);
+
+            if (!state.isRunning) {
+                setMode(state.mode);
+            }
+
+            settingsModal.classList.remove('active');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                start();
+            } else if (e.code === 'KeyR') {
+                reset();
+            } else if (e.code === 'KeyS') {
+                settingsBtn.click();
+            }
+        });
+
+        // Initialize
+        function init() {
+            settings = Storage.getSettings();
+
+            // Try to restore state from storage or another tab
+            const savedState = Storage.getState();
+            if (savedState && savedState.isRunning) {
+                // Calculate what time should be now
+                if (savedState.endTime) {
+                    const remaining = Math.max(0, Math.ceil((savedState.endTime - Date.now()) / 1000));
+                    state.timeLeft = remaining;
+                    state.totalTime = savedState.totalTime;
+                    state.isRunning = remaining > 0;
+                    state.mode = savedState.mode;
+                    state.sessionsCompleted = savedState.sessionsCompleted;
+                    state.endTime = savedState.endTime;
+
+                    if (remaining <= 0) {
+                        Storage.clearState();
+                        state.isRunning = false;
+                    }
+                }
+            }
+
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            setMode(state.mode);
+            updateStats();
+            updateDisplay();
+            updateUI();
+
+            if (state.isRunning) {
+                startTimer(true);
+            } else {
+                setCatMood('sleeping');
+            }
+
+            // Initialize visual effects
+            createStars();
+            startMeteorShower();
+        }
+
+        init();
+    </script>
+</body>
+</html>
