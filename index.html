@@ -19,13 +19,14 @@
         }
 
         body {
-            background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a3e 40%, #0d1b2a 100%);
+            background: radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #eaeaea;
             position: relative;
+            perspective: 1000px;
         }
 
         /* Northern Lights Effect */
@@ -79,7 +80,7 @@
             }
         }
 
-        /* Stars */
+        /* Stars with warp effect */
         .stars {
             position: fixed;
             top: 0;
@@ -88,6 +89,7 @@
             height: 100%;
             pointer-events: none;
             z-index: 0;
+            transition: transform 0.5s ease;
         }
 
         .star {
@@ -97,11 +99,25 @@
             animation: twinkle 3s ease-in-out infinite;
         }
 
+        .stars.warping .star {
+            animation: warp-speed 2s linear infinite;
+        }
+
         @keyframes twinkle {
             0%, 100% { opacity: 0.3; }
             50% { opacity: 1; }
         }
 
+        @keyframes warp-speed {
+            0% {
+                transform: translate(-50%, -50%) scale(0.1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(3);
+                opacity: 0;
+            }
+        }
 
         .container {
             text-align: center;
@@ -139,13 +155,23 @@
             margin: 0 auto 30px;
             position: relative;
             filter: drop-shadow(0 20px 40px rgba(255, 158, 205, 0.2));
+            perspective: 1000px;
         }
 
         .cat {
             width: 100%;
             height: 100%;
             position: relative;
-            transition: all 0.5s ease;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .cat.facing-forward {
+            transform: rotateY(0deg);
+        }
+
+        .cat.facing-away {
+            transform: rotateY(180deg);
         }
 
         /* Cat Body */
@@ -162,12 +188,12 @@
             transition: all 0.5s ease;
         }
 
-        /* Cat Head */
+        /* Cat Head - Forward Facing */
         .cat-head {
             width: 90px;
             height: 80px;
-            background: linear-gradient(135deg, #ffb3d1 0%, #ff9ecd 100%);
-            border-radius: 50% 50% 45% 45%;
+            background: linear-gradient(180deg, #ffb3d1 0%, #ff9ecd 100%);
+            border-radius: 45px 45px 40px 40px;
             position: absolute;
             top: 20px;
             left: 50%;
@@ -180,75 +206,75 @@
         .cat-ear {
             width: 0;
             height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-bottom: 30px solid #ff9ecd;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-bottom: 35px solid #ff9ecd;
             position: absolute;
-            top: -15px;
+            top: -20px;
             transition: all 0.5s ease;
         }
 
         .cat-ear.left {
-            left: 5px;
-            transform: rotate(-15deg);
+            left: 8px;
+            transform: rotate(-10deg);
         }
 
         .cat-ear.right {
-            right: 5px;
-            transform: rotate(15deg);
+            right: 8px;
+            transform: rotate(10deg);
         }
 
         .cat-ear-inner {
             width: 0;
             height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-bottom: 18px solid #ffb3d1;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 22px solid #ffb3d1;
             position: absolute;
-            top: 8px;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
         }
 
-        /* Cat Eyes */
+        /* Cat Eyes - Forward Facing */
         .cat-eye {
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             background: #2d2d2d;
             border-radius: 50%;
             position: absolute;
-            top: 30px;
+            top: 28px;
             transition: all 0.3s ease;
         }
 
         .cat-eye.left {
-            left: 20px;
+            left: 18px;
         }
 
         .cat-eye.right {
-            right: 20px;
+            right: 18px;
         }
 
         .cat-eye::after {
             content: '';
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             background: white;
             border-radius: 50%;
             position: absolute;
-            top: 3px;
+            top: 4px;
             right: 3px;
             transition: all 0.3s ease;
         }
 
         /* Cat Nose */
         .cat-nose {
-            width: 10px;
-            height: 8px;
+            width: 12px;
+            height: 10px;
             background: #ff6b9d;
             border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
             position: absolute;
-            bottom: 25px;
+            bottom: 28px;
             left: 50%;
             transform: translateX(-50%);
             transition: all 0.5s ease;
@@ -260,8 +286,8 @@
             bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            width: 20px;
-            height: 10px;
+            width: 24px;
+            height: 12px;
             opacity: 0;
             transition: all 0.3s ease;
         }
@@ -270,11 +296,11 @@
         .cat-mouth::after {
             content: '';
             position: absolute;
-            width: 10px;
-            height: 8px;
+            width: 12px;
+            height: 10px;
             border: 2px solid #ff6b9d;
             border-top: none;
-            border-radius: 0 0 10px 10px;
+            border-radius: 0 0 12px 12px;
         }
 
         .cat-mouth::before {
@@ -318,42 +344,30 @@
             50% { transform: rotate(8deg); }
         }
 
-        /* Sparkle elements */
-        .sparkle {
-            position: absolute;
-            font-size: 16px;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .sparkle:nth-child(1) { top: 20px; left: 10px; }
-        .sparkle:nth-child(2) { top: 40px; right: 10px; }
-        .sparkle:nth-child(3) { top: 70px; left: 20px; }
-
         /* Blush cheeks */
         .cat-blush {
             position: absolute;
-            width: 18px;
-            height: 10px;
+            width: 20px;
+            height: 12px;
             background: rgba(255, 150, 180, 0.5);
             border-radius: 50%;
-            top: 40px;
+            top: 38px;
             opacity: 0;
             transition: all 0.3s ease;
         }
 
         .cat-blush.left {
-            left: 8px;
+            left: 6px;
         }
 
         .cat-blush.right {
-            right: 8px;
+            right: 6px;
         }
 
         /* Sleeping State */
         .cat.sleeping .cat-eye {
-            height: 3px;
-            top: 38px;
+            height: 4px;
+            top: 36px;
             border-radius: 0 0 10px 10px;
         }
 
@@ -381,10 +395,10 @@
 
         /* Awake State */
         .cat.awake .cat-eye {
-            width: 18px;
-            height: 18px;
+            width: 22px;
+            height: 22px;
             background: #2d2d2d;
-            top: 29px;
+            top: 27px;
             animation: eye-sparkle 3s ease-in-out infinite;
         }
 
@@ -394,9 +408,9 @@
         }
 
         .cat.awake .cat-eye::after {
-            width: 8px;
-            height: 8px;
-            top: 2px;
+            width: 10px;
+            height: 10px;
+            top: 3px;
             right: 2px;
             animation: sparkle 2s ease-in-out infinite;
         }
@@ -430,29 +444,6 @@
             }
             50% {
                 transform: translateY(-8px) scale(1.02);
-            }
-        }
-
-        .cat.awake .sparkle {
-            animation: sparkle-float 2s ease-out infinite;
-        }
-
-        .cat.awake .sparkle:nth-child(1) { animation-delay: 0s; }
-        .cat.awake .sparkle:nth-child(2) { animation-delay: 0.7s; }
-        .cat.awake .sparkle:nth-child(3) { animation-delay: 1.4s; }
-
-        @keyframes sparkle-float {
-            0% {
-                opacity: 0;
-                transform: translate(0, 0) scale(0.5) rotate(0deg);
-            }
-            15% {
-                opacity: 1;
-                transform: translate(5px, -10px) scale(1) rotate(45deg);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(20px, -60px) scale(1.5) rotate(180deg);
             }
         }
 
@@ -869,13 +860,10 @@
 
     <div class="container">
         <div class="cat-container">
-            <div class="cat" id="cat">
+            <div class="cat facing-away" id="cat">
                 <div class="zzz">Z</div>
                 <div class="zzz">Z</div>
                 <div class="zzz">Z</div>
-                <div class="sparkle">✨</div>
-                <div class="sparkle">✨</div>
-                <div class="sparkle">✨</div>
                 <div class="cat-body"></div>
                 <div class="cat-head">
                     <div class="cat-ear left"><div class="cat-ear-inner"></div></div>
@@ -1028,21 +1016,55 @@
             sessionsUntilLong: 4
         };
 
-        // Create stars
+        // Create stars with warp effect
         function createStars() {
             const starsContainer = document.getElementById('stars');
-            const numStars = 150;
+            const numStars = 200;
 
             for (let i = 0; i < numStars; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
+
+                // Position stars from center outward for warp effect
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 50; // Start close to center
+
+                star.style.left = `calc(50% + ${Math.cos(angle) * distance}%)`;
+                star.style.top = `calc(50% + ${Math.sin(angle) * distance}%)`;
+
                 star.style.width = Math.random() * 2 + 1 + 'px';
                 star.style.height = star.style.width;
                 star.style.animationDelay = Math.random() * 3 + 's';
                 star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+
+                // Store original position for warp effect
+                star.dataset.angle = angle;
+                star.dataset.distance = distance;
+                star.dataset.warpDelay = Math.random() * 2;
+
                 starsContainer.appendChild(star);
+            }
+        }
+
+        // Toggle warp effect
+        function toggleWarpEffect(enabled) {
+            const starsContainer = document.getElementById('stars');
+
+            if (enabled) {
+                starsContainer.classList.add('warping');
+                // Update star animations for warp speed
+                const stars = starsContainer.querySelectorAll('.star');
+                stars.forEach(star => {
+                    const delay = parseFloat(star.dataset.warpDelay);
+                    star.style.animationDelay = delay + 's';
+                });
+            } else {
+                starsContainer.classList.remove('warping');
+                // Restore twinkling
+                const stars = starsContainer.querySelectorAll('.star');
+                stars.forEach(star => {
+                    star.style.animationDelay = Math.random() * 3 + 's';
+                });
             }
         }
 
@@ -1302,6 +1324,17 @@
                 : 'Paused';
 
             setCatMood(state.isRunning ? 'awake' : 'sleeping');
+
+            // Toggle cat facing direction and warp effect
+            if (state.isRunning) {
+                cat.classList.remove('facing-away');
+                cat.classList.add('facing-forward');
+                toggleWarpEffect(true);
+            } else {
+                cat.classList.remove('facing-forward');
+                cat.classList.add('facing-away');
+                toggleWarpEffect(false);
+            }
         }
 
         function setCatMood(mood) {
@@ -1365,6 +1398,11 @@
             statusText.textContent = state.mode === 'focus' ? "Let's do this! 💪" : 'Take a break';
             setCatMood('awake');
 
+            // Cat faces forward and warp effect starts
+            cat.classList.remove('facing-away');
+            cat.classList.add('facing-forward');
+            toggleWarpEffect(true);
+
             state.interval = setInterval(() => {
                 if (state.endTime) {
                     const remaining = Math.max(0, Math.ceil((state.endTime - Date.now()) / 1000));
@@ -1398,6 +1436,12 @@
             startBtn.textContent = 'Start';
             statusText.textContent = 'Paused';
             setCatMood('sleeping');
+
+            // Cat turns away and warp effect stops
+            cat.classList.remove('facing-forward');
+            cat.classList.add('facing-away');
+            toggleWarpEffect(false);
+
             broadcastState();
         }
 
