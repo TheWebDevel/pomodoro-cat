@@ -1838,6 +1838,23 @@
             }
         });
 
+        // Auto-pause when tab is closed
+        window.addEventListener('beforeunload', (e) => {
+            if (state.isRunning) {
+                pause();
+                // Note: modern browsers limit what we can do here, but the pause will be saved
+            }
+        });
+
+        // Also handle visibility change (user switches to another tab)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && state.isRunning) {
+                // Optionally auto-pause when switching tabs
+                // Remove the next line if you don't want this behavior
+                pause();
+            }
+        });
+
         // Initialize
         function init() {
             settings = Storage.getSettings();
