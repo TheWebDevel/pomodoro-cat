@@ -907,6 +907,7 @@
         <div class="controls">
             <button class="btn-primary" id="startBtn">Start</button>
             <button class="btn-secondary" id="resetBtn">Reset</button>
+            <button class="btn-secondary" id="skipBreakBtn" style="display: none;">Skip Break</button>
             <button class="btn-secondary btn-icon" id="settingsBtn">⚙</button>
         </div>
     </div>
@@ -1082,6 +1083,7 @@
         const timerDisplay = document.getElementById('timerDisplay');
         const startBtn = document.getElementById('startBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const skipBreakBtn = document.getElementById('skipBreakBtn');
         const settingsBtn = document.getElementById('settingsBtn');
         const calendarBtn = document.getElementById('calendarBtn');
         const settingsModal = document.getElementById('settingsModal');
@@ -1367,18 +1369,21 @@
                     modeIndicator.textContent = 'FOCUS TIME';
                     timerDisplay.classList.remove('break');
                     progressCircle.style.stroke = '#ff9ecd';
+                    skipBreakBtn.style.display = 'none';
                     break;
                 case 'shortBreak':
                     state.totalTime = settings.shortBreak * 60;
                     modeIndicator.textContent = 'SHORT BREAK';
                     timerDisplay.classList.add('break');
                     progressCircle.style.stroke = '#87ceeb';
+                    skipBreakBtn.style.display = 'inline-block';
                     break;
                 case 'longBreak':
                     state.totalTime = settings.longBreak * 60;
                     modeIndicator.textContent = 'LONG BREAK';
                     timerDisplay.classList.add('break');
                     progressCircle.style.stroke = '#87ceeb';
+                    skipBreakBtn.style.display = 'inline-block';
                     break;
             }
 
@@ -1470,6 +1475,14 @@
             state.timeLeft = state.totalTime;
             updateDisplay();
             statusText.textContent = 'Ready to focus';
+            setCatMood('sleeping');
+            broadcastState();
+        }
+
+        function skipBreak() {
+            pause();
+            setMode('focus');
+            statusText.textContent = 'Break skipped! Ready to focus?';
             setCatMood('sleeping');
             broadcastState();
         }
@@ -1692,6 +1705,7 @@
         // Event listeners
         startBtn.addEventListener('click', start);
         resetBtn.addEventListener('click', reset);
+        skipBreakBtn.addEventListener('click', skipBreak);
 
         settingsBtn.addEventListener('click', () => {
             settingsModal.classList.add('active');
