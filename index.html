@@ -1450,7 +1450,7 @@
             }
         }
 
-        function setMode(mode) {
+        function setMode(mode, resetTime = true) {
             state.mode = mode;
 
             switch(mode) {
@@ -1474,7 +1474,9 @@
                     break;
             }
 
-            state.timeLeft = state.totalTime;
+            if (resetTime) {
+                state.timeLeft = state.totalTime;
+            }
             updateDisplay();
             broadcastState();
         }
@@ -1979,7 +1981,9 @@
                 Notification.requestPermission();
             }
 
-            setMode(state.mode);
+            // Don't reset time when restoring state
+            const wasRestored = savedState !== null;
+            setMode(state.mode, !wasRestored);
             updateStats();
             updateDisplay();
             updateUI();
