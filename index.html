@@ -990,6 +990,15 @@
                 <input type="number" id="sessionsUntilLong" value="4" min="2" max="10">
             </div>
             <button class="btn-primary" id="saveSettings" style="width: 100%; margin-top: 10px;">Save</button>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <h3 style="font-size: 14px; color: rgba(255, 255, 255, 0.7); margin-bottom: 15px; font-weight: 500;">DATA MANAGEMENT</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-secondary" id="exportData" style="flex: 1; min-width: 120px;">📤 Export Data</button>
+                    <button class="btn-secondary" id="importData" style="flex: 1; min-width: 120px;">📥 Import Data</button>
+                </div>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </div>
         </div>
     </div>
 
@@ -1738,6 +1747,78 @@
             }
 
             settingsModal.classList.remove('active');
+        });
+
+        // Export data
+        document.getElementById('exportData').addEventListener('click', () => {
+            const data = {
+                version: 1,
+                exportDate: new Date().toISOString(),
+                streakData: Storage.getStreakData(),
+                settings: Storage.getSettings(),
+                sessions: Storage.getData().sessions
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pomodoro-cat-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Import data
+        document.getElementById('importData').addEventListener('click', () => {
+            document.getElementById('importFile').click();
+        });
+
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+
+                    // Validate data structure
+                    if (!data.streakData || !Array.isArray(data.streakData)) {
+                        alert('Invalid backup file format');
+                        return;
+                    }
+
+                    // Confirm import
+                    if (confirm(`Import ${data.streakData.length} days of streak data? This will merge with your existing data.`)) {
+                        // Merge streak data (avoid duplicates)
+                        const existingStreaks = Storage.getStreakData();
+                        const mergedStreaks = [...new Set([...existingStreaks, ...data.streakData])];
+                        Storage.saveStreakData(mergedStreaks);
+
+                        // Optionally import settings if available
+                        if (data.settings) {
+                            const newSettings = { ...settings, ...data.settings };
+                            Storage.saveSettings(newSettings);
+                            settings = newSettings;
+                            if (!state.isRunning) {
+                                setMode(state.mode);
+                            }
+                        }
+
+                        updateStats();
+                        alert(`Successfully imported ${mergedStreaks.length - existingStreaks.length} new days of streak data!`);
+                    }
+                } catch (error) {
+                    alert('Error reading backup file. Please make sure it\'s a valid Pomodoro Cat backup.');
+                    console.error('Import error:', error);
+                }
+
+                // Reset file input
+                e.target.value = '';
+            };
+            reader.readAsText(file);
         });
 
         // Keyboard shortcuts
