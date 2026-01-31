@@ -457,79 +457,6 @@
             50% { transform: translateY(-25px) scale(1.05); }
         }
 
-        /* Thought Bubble */
-        .thought-bubble {
-            position: absolute;
-            top: -60px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 15px 20px;
-            min-width: 200px;
-            max-width: 280px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            transition: all 0.3s ease;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .thought-bubble.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .thought-bubble::before {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 30px;
-            width: 20px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 50%;
-        }
-
-        .thought-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -20px;
-            left: 20px;
-            width: 12px;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 50%;
-        }
-
-        .thought-bubble-text {
-            font-size: 14px;
-            color: #333;
-            font-weight: 500;
-            margin-bottom: 10px;
-        }
-
-        .thought-bubble-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 2px solid rgba(255, 158, 205, 0.3);
-            border-radius: 10px;
-            font-size: 14px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .thought-bubble-input:focus {
-            border-color: #ff9ecd;
-            background: white;
-        }
-
-        .thought-bubble-input::placeholder {
-            color: rgba(0, 0, 0, 0.4);
-        }
-
         .zzz {
             position: absolute;
             top: 10px;
@@ -951,13 +878,6 @@
                 </div>
                 <div class="cat-tail"></div>
             </div>
-
-            <!-- Thought Bubble -->
-            <div class="thought-bubble" id="thoughtBubble">
-                <div class="thought-bubble-text">💭 What's your focus?</div>
-                <input type="text" class="thought-bubble-input" id="focusInput" placeholder="e.g., Complete project proposal" maxlength="100">
-            </div>
-
             <svg class="progress-ring">
                 <circle
                     stroke="rgba(255, 158, 205, 0.3)"
@@ -1095,8 +1015,7 @@
             mode: 'focus',
             sessionsCompleted: 0,
             interval: null,
-            endTime: null,
-            currentFocus: ''
+            endTime: null
         };
 
         // Settings
@@ -1177,8 +1096,6 @@
         const todayCount = document.getElementById('todayCount');
         const streakCount = document.getElementById('streakCount');
         const weekCount = document.getElementById('weekCount');
-        const thoughtBubble = document.getElementById('thoughtBubble');
-        const focusInput = document.getElementById('focusInput');
 
         // Initialize progress circle
         const circumference = 2 * Math.PI * 120;
@@ -1207,13 +1124,12 @@
                 localStorage.setItem(this.KEY, JSON.stringify(data));
             },
 
-            addSession(duration, mode, focus = '') {
+            addSession(duration, mode) {
                 const data = this.getData();
                 data.sessions.push({
                     timestamp: Date.now(),
                     duration,
-                    mode,
-                    focus
+                    mode
                 });
                 this.setData(data);
 
@@ -1424,18 +1340,10 @@
                 cat.classList.remove('facing-away');
                 cat.classList.add('facing-forward');
                 toggleWarpEffect(true);
-                thoughtBubble.classList.remove('visible');
             } else {
                 cat.classList.remove('facing-forward');
                 cat.classList.add('facing-away');
                 toggleWarpEffect(false);
-
-                // Show thought bubble only when not running and in focus mode
-                if (state.mode === 'focus') {
-                    thoughtBubble.classList.add('visible');
-                } else {
-                    thoughtBubble.classList.remove('visible');
-                }
             }
         }
 
@@ -1571,7 +1479,7 @@
 
             if (state.mode === 'focus') {
                 state.sessionsCompleted++;
-                Storage.addSession(settings.focusDuration, 'focus', state.currentFocus);
+                Storage.addSession(settings.focusDuration, 'focus');
                 updateStats();
 
                 if (state.sessionsCompleted % settings.sessionsUntilLong === 0) {
@@ -1593,11 +1501,8 @@
 
             // Send browser notification for BOTH sessions and breaks
             if (Notification.permission === 'granted') {
-                const notificationBody = state.currentFocus
-                    ? `${statusText.textContent}\n\nFocus: ${state.currentFocus}`
-                    : statusText.textContent;
                 new Notification('Pomodoro Cat', {
-                    body: notificationBody,
+                    body: statusText.textContent,
                     icon: '🐱'
                 });
             }
@@ -1933,23 +1838,9 @@
             }
         });
 
-        // Focus input handler
-        focusInput.addEventListener('input', (e) => {
-            state.currentFocus = e.target.value;
-            // Save to localStorage for persistence
-            localStorage.setItem('pomodoro_cat_current_focus', e.target.value);
-        });
-
         // Initialize
         function init() {
             settings = Storage.getSettings();
-
-            // Load current focus from localStorage
-            const savedFocus = localStorage.getItem('pomodoro_cat_current_focus');
-            if (savedFocus) {
-                state.currentFocus = savedFocus;
-                focusInput.value = savedFocus;
-            }
 
             // Try to restore state from storage or another tab
             const savedState = Storage.getState();
