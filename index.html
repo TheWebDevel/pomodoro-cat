@@ -1842,9 +1842,9 @@
 
             // Try to restore state from storage or another tab
             const savedState = Storage.getState();
-            if (savedState && savedState.isRunning) {
+            if (savedState) {
                 // Calculate what time should be now
-                if (savedState.endTime) {
+                if (savedState.endTime && savedState.isRunning) {
                     const remaining = Math.max(0, Math.ceil((savedState.endTime - Date.now()) / 1000));
                     state.timeLeft = remaining;
                     state.totalTime = savedState.totalTime;
@@ -1857,6 +1857,12 @@
                         Storage.clearState();
                         state.isRunning = false;
                     }
+                } else if (!savedState.isRunning) {
+                    // Restore paused state
+                    state.timeLeft = savedState.timeLeft;
+                    state.totalTime = savedState.totalTime;
+                    state.mode = savedState.mode;
+                    state.sessionsCompleted = savedState.sessionsCompleted;
                 }
             }
 
